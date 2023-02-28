@@ -15,5 +15,5 @@ import torch.nn.functional as F
 import torch.nn.utils.prune as prune
 import captum.attr as attr
 import matplotlib.pyplot as pyplot
-from keras.preprocessing.sequence import pad_sequences
+from keras_preprocessing.sequence import pad_sequences
 from sklearn.metrics import f1_score
