@@ -30,7 +30,7 @@ train_loaders = {
             config = config, 
             augment = True, 
         ), 
-        num_workers = 8, batch_size = 224, 
+        num_workers = 8, batch_size = 32, 
         shuffle = True
     ), 
     "val":torch.utils.data.DataLoader(
@@ -39,7 +39,7 @@ train_loaders = {
             config = config, 
             augment = False, 
         ), 
-        num_workers = 8, batch_size = 224, 
+        num_workers = 8, batch_size = 32, 
         shuffle = False
     ), 
 }
@@ -62,10 +62,21 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(
 save_ckp_dir = "../ckps/{}/{}".format(args.dataset, "LightX3ECG")
 if not os.path.exists(save_ckp_dir):
     os.makedirs(save_ckp_dir)
+
+# print("####################################################################")
+# print("####################################################################")
+# print(train_loaders)
+# print(train_loaders["train"])
+# print(train_loaders["val"])
+# print(next(iter(train_loaders["train"])))
+# print(next(iter(train_loaders["val"])))
+# print("####################################################################")
+# print("####################################################################")
+
 train_fn(
     train_loaders, 
     model, 
-    num_epochs = 70, 
+    num_epochs = 40, 
     config = config, 
     criterion = criterion, 
     optimizer = optimizer, 
