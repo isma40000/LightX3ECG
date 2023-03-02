@@ -59,7 +59,8 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(
     eta_min = 1e-4, T_max = 40, 
 )
 
-save_ckp_dir = "../ckps/{}/{}".format(args.dataset, "LightX3ECG")
+# save_ckp_dir = "../ckps/{}/{}".format(args.dataset, "LightX3ECG")
+save_ckp_dir = "/content/drive/Shareddrives/TFG_INFO/Codigo/Modelo/ckps/{}".format(args.dataset)
 if not os.path.exists(save_ckp_dir):
     os.makedirs(save_ckp_dir)
 
@@ -80,6 +81,6 @@ train_fn(
     config = config, 
     criterion = criterion, 
     optimizer = optimizer, 
-    scheduler = scheduler, 
+    scheduler = scheduler,
     save_ckp_dir = save_ckp_dir, 
 )
