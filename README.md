@@ -4,7 +4,13 @@ which is the 1st part of our project on Reduced-lead ECG Classification. Check o
 # Source
 ## nets
 ## tools
-### train.py
-dataset : Dataset que se usará para entrenar el modelo. Puede ser CPSC-2018 o Chapman.
-multilabel : Booleano que se usa para indicar si se usarán múltiples etiquetas.
-num_gpus : Número de GPUs que se usarán durante el entrenamiento.
+### **train.py**
+Para lanzar el train ahora mismo se utiliza el siguiente comando:
+```
+python3 tools/train.py --dataset "CPSC-2018" --num_classes 9 --multilabel
+```
+- dataset : Dataset que se usará para entrenar el modelo. Puede ser CPSC-2018 o Chapman. <br/>
+- multilabel : Booleano que se usa para indicar si se usarán múltiples etiquetas. <br/>
+- num_gpus : Número de GPUs que se usarán durante el entrenamiento. <br/>
+
+Hola caracola

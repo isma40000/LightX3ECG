@@ -1,12 +1,12 @@
 
 import os, sys
-import configVars
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__), sys.path.append(os.path.abspath(os.path.join(__dir__, "..")))
 from libs import *
 from data import ECGDataset
 from nets.nets import LightX3ECG
 from engines import train_fn
+import configVars
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dataset", type = str), parser.add_argument("--num_classes", type = int)
