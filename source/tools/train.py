@@ -27,7 +27,7 @@ config = {
 train_loaders = {
     "train":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = "../datasets/{}/train.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpySoloArray/".format(args.dataset), 
+            df_path = configVars.pathCasos + "{}/train.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpy/".format(args.dataset), 
             config = config, 
             augment = True, 
         ), 
@@ -36,7 +36,7 @@ train_loaders = {
     ), 
     "val":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = "../datasets/{}/val.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpySoloArray/".format(args.dataset), 
+            df_path = configVars.pathCasos + "{}/val.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpy/".format(args.dataset), 
             config = config, 
             augment = False, 
         ), 
