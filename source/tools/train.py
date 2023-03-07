@@ -1,5 +1,6 @@
 
 import os, sys
+import configVars
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__), sys.path.append(os.path.abspath(os.path.join(__dir__, "..")))
 from libs import *
@@ -26,7 +27,7 @@ config = {
 train_loaders = {
     "train":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = "../datasets/{}/train.csv".format(args.dataset), data_path = "/content/drive/Shareddrives/TFG_INFO/Codigo/Casos/{}/CasosNumpySoloArray/".format(args.dataset), 
+            df_path = "../datasets/{}/train.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpySoloArray/".format(args.dataset), 
             config = config, 
             augment = True, 
         ), 
@@ -35,7 +36,7 @@ train_loaders = {
     ), 
     "val":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = "../datasets/{}/val.csv".format(args.dataset), data_path = "/content/drive/Shareddrives/TFG_INFO/Codigo/Casos/{}/CasosNumpySoloArray/".format(args.dataset), 
+            df_path = "../datasets/{}/val.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpySoloArray/".format(args.dataset), 
             config = config, 
             augment = False, 
         ), 
@@ -60,7 +61,7 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(
 )
 
 # save_ckp_dir = "../ckps/{}/{}".format(args.dataset, "LightX3ECG")
-save_ckp_dir = "/content/drive/Shareddrives/TFG_INFO/Codigo/Modelo/ckps/{}".format(args.dataset)
+save_ckp_dir = configVars.pathModelos + "{}".format(args.dataset)
 if not os.path.exists(save_ckp_dir):
     os.makedirs(save_ckp_dir)
 
