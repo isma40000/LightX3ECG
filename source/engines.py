@@ -75,10 +75,10 @@ def train_fn(
                 epoch_loss, epoch_f1
             ))
         if epoch_f1 > best_f1:
-            best_f1 = epoch_f1; torch.save(model.module, "{}/best.ptl".format(save_ckp_dir))
+            best_f1 = epoch_f1; torch.save(model.module, f"{save_ckp_dir}/best.ptl")
 
     print("\nStart Evaluation ...\n" + " = "*16)
-    model = torch.load("{}/best.ptl".format(save_ckp_dir), map_location = "cuda")
+    model = torch.load(f"{save_ckp_dir}/best.ptl", map_location = "cuda")
     model = nn.DataParallel(model, device_ids = config["device_ids"])
 
     with torch.no_grad():

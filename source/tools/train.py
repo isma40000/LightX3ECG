@@ -27,20 +27,20 @@ config = {
 train_loaders = {
     "train":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = configVars.pathCasos + "{}/train.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpy/".format(args.dataset), 
+            df_path = f"{configVars.pathCasos}{args.dataset}/train.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy/", 
             config = config, 
             augment = True, 
         ), 
-        num_workers = 8, batch_size = 32, 
+        num_workers = 8, batch_size = 64, 
         shuffle = True
     ), 
     "val":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = configVars.pathCasos + "{}/val.csv".format(args.dataset), data_path = configVars.pathCasos + "{}/CasosNumpy/".format(args.dataset), 
+            df_path = f"{configVars.pathCasos}{args.dataset}/val.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy/", 
             config = config, 
             augment = False, 
         ), 
-        num_workers = 8, batch_size = 32, 
+        num_workers = 8, batch_size = 64, 
         shuffle = False
     ), 
 }
@@ -61,7 +61,7 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(
 )
 
 # save_ckp_dir = "../ckps/{}/{}".format(args.dataset, "LightX3ECG")
-save_ckp_dir = configVars.pathModelos + "{}".format(args.dataset)
+save_ckp_dir = f"{configVars.pathModelos}{args.dataset}"
 if not os.path.exists(save_ckp_dir):
     os.makedirs(save_ckp_dir)
 
