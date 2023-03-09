@@ -1,6 +1,5 @@
 /ckps
 **/__pycache__
-/source
 /datasets/Chapman/CasosNumpy/*
 /datasets/CPSC-2018/CasosNumpy/*
 /commands.txt
