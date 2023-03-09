@@ -77,6 +77,7 @@ def train_fn(
         if epoch_f1 > best_f1:
             best_f1 = epoch_f1; torch.save(model.module, f"{save_ckp_dir}/best.ptl")
 
+    #En esta evaluación se está prediciendo realmente
     print("\nStart Evaluation ...\n" + " = "*16)
     model = torch.load(f"{save_ckp_dir}/best.ptl", map_location = "cuda")
     model = nn.DataParallel(model, device_ids = config["device_ids"])
@@ -89,14 +90,16 @@ def train_fn(
 
             logits = model(ecgs)
 
+            #labels son las etiquetas reales y preds las que ha predicho el modelo
             labels, preds = list(labels.data.cpu().numpy()), list(torch.max(logits, 1)[1].detach().cpu().numpy()) if not config["is_multilabel"] else list(torch.sigmoid(logits).detach().cpu().numpy())
             running_labels.extend(labels), running_preds.extend(preds)
 
     if config["is_multilabel"]:
         running_labels, running_preds = np.array(running_labels), np.array(running_preds)
-
+        #Te quedas con los umbrales que tienen un mejor f1_score
         optimal_thresholds = thresholds_search(running_labels, running_preds)
         running_preds = np.stack([
+            #Determinas si las predicciones cumplen con el umbral óptimo, los umbrales óptimos son los que tienen mejor f1_score y menor pérdida
             np.where(running_preds[:, cls] >= optimal_thresholds[cls], 1, 0) for cls in range(running_preds.shape[1])
         ]).transpose()
     val_loss, val_f1 = running_loss/len(train_loaders["val"].dataset), f1_score(
@@ -107,3 +110,49 @@ def train_fn(
         "val", 
         val_loss, val_f1
     ))
+    
+############################################################################################
+############################################################################################
+################################### BAJO CONSTRUCCIÓN ######################################
+############################################################################################
+############################################################################################
+
+def predict(
+    train_loaders, 
+    model, 
+    config,
+    save_ckp_dir = "./", 
+    training_verbose = True, 
+):
+    model = torch.load(f"{save_ckp_dir}/best.ptl", map_location = "cuda")
+    model = nn.DataParallel(model, device_ids = config["device_ids"])
+    
+    with torch.no_grad():
+        model.eval()
+        running_labels, running_preds = [], []
+        for ecgs, labels in tqdm(train_loaders["pred"], disable = not training_verbose):
+            ecgs, labels = ecgs.cuda(), labels.cuda()
+
+            logits = model(ecgs)
+
+            #labels son las etiquetas reales y preds las que ha predicho el modelo
+            labels, preds = list(labels.data.cpu().numpy()), list(torch.max(logits, 1)[1].detach().cpu().numpy()) if not config["is_multilabel"] else list(torch.sigmoid(logits).detach().cpu().numpy())
+            running_labels.extend(labels), running_preds.extend(preds)
+
+    if config["is_multilabel"]:
+        running_labels, running_preds = np.array(running_labels), np.array(running_preds)
+        #Te quedas con los umbrales que tienen un mejor f1_score
+        optimal_thresholds = thresholds_search(running_labels, running_preds)
+        running_probs = running_preds
+        running_preds = np.stack([
+            np.where(running_preds[:, cls] >= optimal_thresholds[cls], 1, 0) for cls in range(running_preds.shape[1])
+        ]).transpose()
+        
+    print(f"Forma de las running_labels: {running_labels.shape}\n")
+    print(running_labels)
+    print(f"\nForma de las running_preds: {running_preds.shape}\n")
+    print(running_preds)
+    print(f"\nForma de las running_probs: {running_probs.shape}\n")
+    print(running_probs)
+    print(f"\noptimal_thresholds utilizados:\n")
+    print(optimal_thresholds)

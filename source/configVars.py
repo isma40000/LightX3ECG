@@ -1,6 +1,6 @@
 # DRIVE
-# pathCasos = "/content/drive/Shareddrives/TFG_INFO/Codigo/Casos/"
-# pathModelos = "/content/drive/Shareddrives/TFG_INFO/Codigo/Modelo/ckps/"
+pathCasos = "../../drive/Shareddrives/TFG_INFO/Codigo/Casos/"
+pathModelos = "../../drive/Shareddrives/TFG_INFO/Codigo/Modelos/"
 # Local
-pathCasos = "../datasets/"
-pathModelos = "../modelos/"
+# pathCasos = "../datasets/"
+# pathModelos = "../modelos/"
