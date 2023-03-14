@@ -2,6 +2,7 @@
 import os, sys
 from libs import *
 from utils import *
+import neurokit2 as nk
 
 def train_fn(
     train_loaders, 
@@ -111,6 +112,23 @@ def train_fn(
         val_loss, val_f1
     ))
     
+    
+############################################################################################
+############################################################################################
+################################### BAJO CONSTRUCCIÓN ######################################
+############################################################################################
+############################################################################################
+
+def get_r_count(ecg):
+    counts = []
+    for i in range(ecg.shape[0]):
+        try:
+            count = len(nk.ecg_peaks(ecg[i, :], sampling_rate=500)[1]['ECG_R_Peaks'].tolist())
+        except:
+            count = 0
+        counts.append(count)
+    return max(set(counts), key = counts.count)
+
 ############################################################################################
 ############################################################################################
 ################################### BAJO CONSTRUCCIÓN ######################################
@@ -131,8 +149,13 @@ def predict(
         model.eval()
         running_labels, running_preds = [], []
         for ecgs, labels in tqdm(train_loaders["pred"], disable = not training_verbose):
+            # CODIGO USADO PARA MOSTRAR EL R_COUNT DE LOS CASOS
+            # print(f"\n{ecgs[0]}:{ecgs[0].shape}")
+            # i = 1
+            # for ecg in ecgs:
+            #     print(f"\nEl r_count del Caso {i} es: {get_r_count(ecg)}")
+            #     i+=1
             ecgs, labels = ecgs.cuda(), labels.cuda()
-
             logits = model(ecgs)
 
             #labels son las etiquetas reales y preds las que ha predicho el modelo
@@ -156,3 +179,4 @@ def predict(
     print(running_probs)
     print(f"\noptimal_thresholds utilizados:\n")
     print(optimal_thresholds)
+    

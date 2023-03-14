@@ -29,10 +29,10 @@ train_loaders = {
         ECGDataset(
             df_path = f"{configVars.pathCasos}{args.dataset}/pred.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy/", 
             config = config, 
-            augment = True, 
+            augment = False, 
         ), 
         num_workers = 8, batch_size = 64, 
-        shuffle = True
+        shuffle = False
     )
 }
 
