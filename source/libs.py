@@ -17,3 +17,6 @@ import captum.attr as attr
 import matplotlib.pyplot as pyplot
 from keras_preprocessing.sequence import pad_sequences
 from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_fscore_support
+
+from pandas.plotting import table

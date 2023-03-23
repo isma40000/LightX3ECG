@@ -13,4 +13,7 @@ python3 tools/train.py --dataset "CPSC-2018" --num_classes 9 --multilabel
 - multilabel : Booleano que se usa para indicar si se usarán múltiples etiquetas. <br/>
 - num_gpus : Número de GPUs que se usarán durante el entrenamiento. <br/>
 
-Hola caracola
+### **Casos CPSC-2018**
+Los casos guardados en CPSC-2018 son divididos por 200 y sin dividir, los que no han sido divididos son los que acaban en OG (original).
+#### **Entrenamiento**
+Para el entrenamiento y predicción los casos están divididos en tres subconjuntos, train, pred y val. En el train están la mayor parte de los casos, luego otra parte está en validación y finalmente los casos de la tabla de enfermedades están únicamente en pred.

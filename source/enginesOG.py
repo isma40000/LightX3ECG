@@ -3,8 +3,6 @@ import os, sys
 from libs import *
 from utils import *
 import neurokit2 as nk
-import configVars
-
 
 def train_fn(
     train_loaders, 
@@ -22,9 +20,6 @@ def train_fn(
     model = nn.DataParallel(model, device_ids = config["device_ids"])
 
     best_f1 = 0.0
-    best_prec = 0.0
-    best_recall = 0.0
-    
     for epoch in tqdm(range(1, num_epochs + 1), disable = training_verbose):
         if training_verbose:print("epoch {:2}/{:2}".format(epoch, num_epochs) + "\n" + "-"*16)
 
@@ -47,25 +42,17 @@ def train_fn(
 
         if (scheduler is not None) and (not epoch > scheduler.T_max):
             scheduler.step()
-        # Cambiado para que devuelva también precisión y recall    
-        epoch_loss = running_loss/len(train_loaders["train"].dataset),
-        epoch_prec, epoch_recall, epoch_f1, _ = precision_recall_fscore_support(
+
+        epoch_loss, epoch_f1 = running_loss/len(train_loaders["train"].dataset), f1_score(
             running_labels, running_preds
-            , average = None
+            , average = "macro"
         )
-        # if training_verbose:
-        #     print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
-        #         "train", 
-        #         np.mean(epoch_loss), np.mean(epoch_f1)
-        #     ))
-        
-        # print("#################################################################")
-        # print(f"Forma de las running_labels: {np.array(running_labels).shape}\n")
-        # print(running_labels)
-        # print(f"\nForma de las running_preds: {np.array(running_preds).shape}\n")
-        # print(running_preds)
-        # print("#################################################################")
-        
+        if training_verbose:
+            print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
+                "train", 
+                epoch_loss, epoch_f1
+            ))
+
         with torch.no_grad():
             model.eval()
             running_loss = 0.0
@@ -79,28 +66,18 @@ def train_fn(
                 running_loss = running_loss + loss.item()*ecgs.size(0)
                 labels, preds = list(labels.data.cpu().numpy()), list(torch.max(logits, 1)[1].detach().cpu().numpy()) if not config["is_multilabel"] else list(np.where(torch.sigmoid(logits).detach().cpu().numpy() >= 0.50, 1, 0))
                 running_labels.extend(labels), running_preds.extend(preds)
-            # print("#################################################################")
-            # print(f"Forma de las running_labels: {np.array(running_labels).shape}\n")
-            # print(running_labels)
-            # print(f"\nForma de las running_preds: {np.array(running_preds).shape}\n")
-            # print(running_preds)
-            # print("#################################################################")
-        # Cambiado para que devuelva también precisión y recall        
-        epoch_loss = running_loss/len(train_loaders["val"].dataset)
-        epoch_prec, epoch_recall, epoch_f1, _ = precision_recall_fscore_support(
+
+        epoch_loss, epoch_f1 = running_loss/len(train_loaders["val"].dataset), f1_score(
             running_labels, running_preds
-            , average = None
+            , average = "macro"
         )
-        # if training_verbose:
-        #     print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
-        #         "val", 
-        #         np.mean(epoch_loss), np.mean(epoch_f1)
-        #     ))
-        if np.mean(epoch_f1) > np.mean(best_f1):
-            best_f1 = epoch_f1; 
-            best_prec = epoch_prec; 
-            best_recall = epoch_recall; 
-            torch.save(model.module, f"{save_ckp_dir}/best.ptl")
+        if training_verbose:
+            print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
+                "val", 
+                epoch_loss, epoch_f1
+            ))
+        if epoch_f1 > best_f1:
+            best_f1 = epoch_f1; torch.save(model.module, f"{save_ckp_dir}/best.ptl")
 
     #En esta evaluación se está prediciendo realmente
     print("\nStart Evaluation ...\n" + " = "*16)
@@ -118,14 +95,7 @@ def train_fn(
             #labels son las etiquetas reales y preds las que ha predicho el modelo
             labels, preds = list(labels.data.cpu().numpy()), list(torch.max(logits, 1)[1].detach().cpu().numpy()) if not config["is_multilabel"] else list(torch.sigmoid(logits).detach().cpu().numpy())
             running_labels.extend(labels), running_preds.extend(preds)
-            
-        # print("#################################################################")
-        # print(f"Forma de las running_labels: {np.array(running_labels).shape}\n")
-        # print(running_labels)
-        # print(f"\nForma de las running_preds: {np.array(running_preds).shape}\n")
-        # print(running_preds) 
-        # print("#################################################################")
-    
+
     if config["is_multilabel"]:
         running_labels, running_preds = np.array(running_labels), np.array(running_preds)
         #Te quedas con los umbrales que tienen un mejor f1_score
@@ -134,43 +104,14 @@ def train_fn(
             #Determinas si las predicciones cumplen con el umbral óptimo, los umbrales óptimos son los que tienen mejor f1_score y menor pérdida
             np.where(running_preds[:, cls] >= optimal_thresholds[cls], 1, 0) for cls in range(running_preds.shape[1])
         ]).transpose()
-    val_loss = running_loss/len(train_loaders["val"].dataset)
-    val_prec, val_recall, val_f1, _ = precision_recall_fscore_support(
+    val_loss, val_f1 = running_loss/len(train_loaders["val"].dataset), f1_score(
         running_labels, running_preds
-        , average = None
+        , average = "macro"
     )
-    # print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
-    #     "val", 
-    #     np.mean(val_loss), np.mean(val_f1)
-    # ))
-    print("############Validation###########\n")
-    print(f"\nPrecision:{val_prec}\n{val_prec.shape}\nRecall:{val_recall}\n{val_recall.shape}\nF1:{val_f1}\n{val_f1.shape}\n")
-    print(np.array([val_prec,val_recall,val_f1]))
-    # df = pandas.DataFrame(
-    #     [{
-    #         'Precision': val_prec,
-    #         'Recall': val_recall,
-    #         'F1': val_f1 
-    #     }],
-    #     index=["Normal","AF","I-AVB","LBBB","RBBB","PAC","PVC","STD","STE"]
-    # )
-    # df["Precision"],df["Recall"],df["F1"] = val_prec,val_recall,val_f1
-    if val_prec.shape[0] == 9:
-        df = pandas.DataFrame(np.array([val_prec,val_recall,val_f1]).transpose(),columns=["Precision","Recall","F1"],index=["Normal","AF","I-AVB","LBBB","RBBB","PAC","PVC","STD","STE"])
-    else:
-        df = pandas.DataFrame(np.array([val_prec,val_recall,val_f1]).transpose(),columns=["Precision","Recall","F1"],index=["Label_0","Label_1","Label_2","Label_3"])
-        
-    df.loc['Average'] = df.mean()
-    df.index.names = ['Class']
-    df.to_csv("../../drive/Shareddrives/TFG_INFO/Codigo/Casos/Chapman/tabla.csv")
-    
-    ax = pyplot.subplot(111, frame_on=False) # no visible frame
-    ax.xaxis.set_visible(False)  # hide the x axis
-    ax.yaxis.set_visible(False)  # hide the y axis
-    table(ax, df)  # where df is your data frame
-
-    pyplot.savefig("../../drive/Shareddrives/TFG_INFO/Codigo/Casos/Chapman/tabla.png")
-    print("#################################\n")
+    print("{:<5} - loss:{:.4f}, f1:{:.4f}".format(
+        "val", 
+        val_loss, val_f1
+    ))
     
     
 ############################################################################################
@@ -211,10 +152,10 @@ def predict(
         for ecgs, labels in tqdm(train_loaders["pred"], disable = not training_verbose):
             #######CODIGO USADO PARA MOSTRAR EL R_COUNT DE LOS CASOS######
             # print(f"\n{ecgs[0]}:{ecgs[0].shape}")
-            # i = 1
-            # for ecg in ecgs:
-            #     print(f"\nEl r_count del Caso {i} es: {get_r_count(ecg)}")
-            #     i+=1
+            i = 1
+            for ecg in ecgs:
+                print(f"\nEl r_count del Caso {i} es: {get_r_count(ecg)}")
+                i+=1
             ##############################################################    
             ecgs, labels = ecgs.cuda(), labels.cuda()
             logits = model(ecgs)
@@ -222,39 +163,21 @@ def predict(
             #labels son las etiquetas reales y preds las que ha predicho el modelo
             labels, preds = list(labels.data.cpu().numpy()), list(torch.max(logits, 1)[1].detach().cpu().numpy()) if not config["is_multilabel"] else list(torch.sigmoid(logits).detach().cpu().numpy())
             running_labels.extend(labels), running_preds.extend(preds)
-    print(f"{running_preds}")    
+
     if config["is_multilabel"]:
         running_labels, running_preds = np.array(running_labels), np.array(running_preds)
         #Te quedas con los umbrales que tienen un mejor f1_score
-        print(f"El reshapeo del array{running_labels.shape}")
-        print(f"El reshapeo del array{running_preds.shape}")
         optimal_thresholds = thresholds_search(running_labels, running_preds)
         running_probs = running_preds
         running_preds = np.stack([
             np.where(running_preds[:, cls] >= optimal_thresholds[cls], 1, 0) for cls in range(running_preds.shape[1])
         ]).transpose()
-    else:   
-        #########################PRUEBA########################
-        running_labels, running_preds = np.array(running_labels), np.array(running_preds)
-        #Te quedas con los umbrales que tienen un mejor f1_score
-        running_labels=np.reshape(running_labels, (len(running_labels),-1))
-        running_preds=np.reshape(running_preds, (len(running_preds),-1))
-        print(f"El reshapeo del array {running_preds.shape}")
-        optimal_thresholds = thresholds_search(running_labels,running_preds)
-        running_probs = running_preds
-        running_preds = np.stack([
-            np.where(running_preds[:, cls] >= optimal_thresholds[cls], 1, 0) for cls in range(running_preds.shape[1])
-        ]).transpose()
-        ########################################################
-    
-    # print(f"Forma de las running_labels: {running_labels.shape}\n")
-    print(f"Forma de las running_labels:\n")
+        
+    print(f"Forma de las running_labels: {running_labels.shape}\n")
     print(running_labels)
-    # print(f"\nForma de las running_preds: {running_preds.shape}\n")
-    print(f"\nForma de las running_preds:\n")
+    print(f"\nForma de las running_preds: {running_preds.shape}\n")
     print(running_preds)
-    # print(f"\nForma de las running_probs: {running_probs.shape}\n")
-    print(f"\nForma de las running_probs:\n")
+    print(f"\nForma de las running_probs: {running_probs.shape}\n")
     print(running_probs)
     print(f"\noptimal_thresholds utilizados:\n")
     print(optimal_thresholds)  

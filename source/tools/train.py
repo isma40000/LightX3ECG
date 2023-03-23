@@ -13,6 +13,7 @@ parser.add_argument("--dataset", type = str), parser.add_argument("--num_classes
 parser.add_argument("--multilabel", action = "store_true")
 parser.add_argument("--num_gpus", type = int, default = 1)
 args = parser.parse_args()
+print(args)
 config = {
     "ecg_leads":[
         0, 1, 
@@ -27,21 +28,23 @@ config = {
 train_loaders = {
     "train":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = f"{configVars.pathCasos}{args.dataset}/train.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy/", 
+            df_path = f"{configVars.pathCasos}{args.dataset}/train.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy", 
             config = config, 
             augment = True, 
         ), 
-        num_workers = 8, batch_size = 64, 
+        num_workers = 8, batch_size = 56, 
         shuffle = True
+        ,drop_last=True
     ), 
     "val":torch.utils.data.DataLoader(
         ECGDataset(
-            df_path = f"{configVars.pathCasos}{args.dataset}/val.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy/", 
+            df_path = f"{configVars.pathCasos}{args.dataset}/val.csv", data_path = f"{configVars.pathCasos}{args.dataset}/CasosNumpy", 
             config = config, 
             augment = False, 
         ), 
-        num_workers = 8, batch_size = 64, 
+        num_workers = 8, batch_size = 56, 
         shuffle = False
+        ,drop_last=True
     ), 
 }
 model = LightX3ECG(
@@ -65,6 +68,7 @@ save_ckp_dir = f"{configVars.pathModelos}{args.dataset}"
 if not os.path.exists(save_ckp_dir):
     os.makedirs(save_ckp_dir)
 
+#Consultar los contenidos de los train_loarders que dan error.
 # print("####################################################################")
 # print("####################################################################")
 # print(train_loaders)
@@ -78,7 +82,7 @@ if not os.path.exists(save_ckp_dir):
 train_fn(
     train_loaders, 
     model, 
-    num_epochs = 70, 
+    num_epochs = 5, 
     config = config, 
     criterion = criterion, 
     optimizer = optimizer, 
